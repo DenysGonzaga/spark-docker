@@ -1,0 +1,54 @@
+version: '3'
+
+networks:
+  cluster-network:
+    driver: bridge
+
+services:
+  spark-master:
+    image: spark_docker:0.0.1
+    ports:  
+      - "8080:8080"
+      - "7077:7077"
+      - "4040:4040"
+      - "6066:6066"
+    command: ["/bin/bash", "-c", "/opt/startup-master.sh"]
+    hostname: spark-master
+    volumes:
+      - ./shared_environment:/opt/shared_environment
+    networks:
+      - cluster-network
+
+  spark-worker-one:
+    image: spark_docker:0.0.1
+    ports:
+      - "7001:7001"
+    environment:
+      - WEBUI_PORT=7001
+      - WRK_MEMORY=4G
+      - WRK_CORES=2
+    command: ["/bin/bash", "-c", "/opt/startup-worker.sh"]
+    hostname: spark-worker-one
+    volumes:
+      - ./shared_environment:/opt/shared_environment
+    depends_on:
+      - spark-master
+    networks:
+      - cluster-network
+  
+  spark-worker-two:
+    image: spark_docker:0.0.1
+    ports:
+      - "7002:7002"
+    environment:
+      - WEBUI_PORT=7002
+      - WRK_MEMORY=4G
+      - WRK_CORES=2
+    command: ["/bin/bash", "-c", "/opt/startup-worker.sh"]
+    hostname: spark-worker-two
+    volumes:
+      - ./shared_environment:/opt/shared_environment
+    depends_on:
+      - spark-master
+    networks:
+      - cluster-network
